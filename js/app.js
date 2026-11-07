@@ -27,22 +27,34 @@ const Listaro = (() => {
     return Number(new URLSearchParams(window.location.search).get(nombre)) || 0;
   }
 
+  function enPaginas() {
+    return window.location.pathname.split("/").includes("Paginas");
+  }
+
+  function rutaPagina(nombre) {
+    return enPaginas() ? nombre : `Paginas/${nombre}`;
+  }
+
+  function rutaInicio() {
+    return enPaginas() ? "../index.html" : "index.html";
+  }
+
   /* ---------------------------------------------------- navegación */
   function pintarNav() {
     const zona = document.querySelector(".nav-acciones");
     if (!zona) return;
     const u = Datos.usuarioActual();
     zona.innerHTML = u
-      ? `<a class="btn btn-fantasma" href="panel.html">Mi panel</a>
+      ? `<a class="btn btn-fantasma" href="${rutaPagina("panel.html")}">Mi panel</a>
          <button class="btn btn-naranja" id="btn-salir">Cerrar sesión</button>`
-      : `<a class="btn btn-fantasma" href="login.html">Entrar</a>
-         <a class="btn btn-naranja" href="registro.html">Crear cuenta</a>`;
+      : `<a class="btn btn-fantasma" href="${rutaPagina("login.html")}">Entrar</a>
+         <a class="btn btn-naranja" href="${rutaPagina("registro.html")}">Crear cuenta</a>`;
 
     const salir = document.getElementById("btn-salir");
     if (salir) {
       salir.addEventListener("click", () => {
         Datos.salir();
-        window.location.href = "index.html";
+        window.location.href = rutaInicio();
       });
     }
   }
@@ -90,7 +102,7 @@ const Listaro = (() => {
       const d = Object.fromEntries(new FormData(form).entries());
       try {
         Datos.entrar(d.correo, d.clave);
-        window.location.href = "panel.html";
+        window.location.href = rutaPagina("panel.html");
       } catch (e) {
         mostrarError("#error-login", e.message);
       }
@@ -105,7 +117,7 @@ const Listaro = (() => {
       const d = Object.fromEntries(new FormData(form).entries());
       try {
         Datos.registrar(d);
-        window.location.href = "panel.html";
+        window.location.href = rutaPagina("panel.html");
       } catch (e) {
         mostrarError("#error-registro", e.message);
       }
@@ -145,7 +157,7 @@ const Listaro = (() => {
 
       zona.className = "grilla-edificios";
       zona.innerHTML = lista.map((e) => `
-        <a class="tarjeta tarjeta-enlace" href="edificio.html?id=${e.id}">
+        <a class="tarjeta tarjeta-enlace" href="${rutaPagina(`edificio.html?id=${e.id}`)}">
           <div class="tarjeta-tope">
             <h3>${escapar(e.nombre)}</h3>
             ${e.alertas
@@ -186,7 +198,7 @@ const Listaro = (() => {
 
     const ed = Datos.edificio(parametro("id"), u.id);
     if (!ed) {
-      window.location.href = "panel.html";
+      window.location.href = rutaPagina("panel.html");
       return;
     }
 
@@ -210,7 +222,7 @@ const Listaro = (() => {
       }
       zona.className = "grilla-habitaciones";
       zona.innerHTML = lista.map((h) => `
-        <a class="tarjeta tarjeta-enlace" href="habitacion.html?id=${h.id}">
+        <a class="tarjeta tarjeta-enlace" href="${rutaPagina(`habitacion.html?id=${h.id}`)}">
           <div class="tarjeta-tope">
             <h3>${escapar(h.nombre)}</h3>
             ${h.alertas
@@ -251,7 +263,7 @@ const Listaro = (() => {
 
     const hab = Datos.habitacion(parametro("id"), u.id);
     if (!hab) {
-      window.location.href = "panel.html";
+      window.location.href = rutaPagina("panel.html");
       return;
     }
 
@@ -260,7 +272,7 @@ const Listaro = (() => {
     document.getElementById("h-miga").textContent = hab.nombre;
     const migaEd = document.getElementById("h-miga-edificio");
     migaEd.textContent = hab.edificioNombre;
-    migaEd.href = `edificio.html?id=${hab.edificioId}`;
+    migaEd.href = rutaPagina(`edificio.html?id=${hab.edificioId}`);
 
     function pintar() {
       const items = Datos.itemsDe(hab.id);
