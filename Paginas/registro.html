@@ -50,6 +50,13 @@
         <input id="confirmar" name="confirmar" type="password"
                autocomplete="new-password" placeholder="Escríbela otra vez" required>
 
+        <label for="rol">Tipo de usuario</label>
+        <select id="rol" name="rol" required>
+          <option value="almacenista">Almacenista — gestiona existencias</option>
+          <option value="repartidor">Repartidor — surte habitaciones</option>
+        </select>
+        <p class="sub">Las cuentas administrador las crea otro administrador.</p>
+
         <button class="btn btn-naranja btn-bloque" type="submit">Crear cuenta</button>
       </form>
 

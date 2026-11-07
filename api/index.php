@@ -155,6 +155,7 @@ if ($action === 'register' && $method === 'POST') {
     $correo = strtolower(trim((string)($data['correo'] ?? '')));
     $clave = (string)($data['clave'] ?? '');
     $confirmar = (string)($data['confirmar'] ?? '');
+    $rol = $data['rol'] ?? 'almacenista';
     if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         fail('Escribe un correo válido.');
     }
@@ -164,17 +165,20 @@ if ($action === 'register' && $method === 'POST') {
     if ($clave !== $confirmar) {
         fail('Las contraseñas no coinciden.');
     }
+    if (!in_array($rol, ['almacenista', 'repartidor'], true)) {
+        fail('El tipo de usuario seleccionado no es válido.');
+    }
     $stmt = db()->prepare('SELECT id FROM usuarios WHERE correo = ?');
     $stmt->execute([$correo]);
     if ($stmt->fetch()) {
         fail('Ese correo ya tiene una cuenta. Inicia sesión.');
     }
     $stmt = db()->prepare('INSERT INTO usuarios (nombre, correo, clave, rol) VALUES (?, ?, ?, ?)');
-    $stmt->execute([$nombre, $correo, password_hash($clave, PASSWORD_DEFAULT), 'almacenista']);
+    $stmt->execute([$nombre, $correo, password_hash($clave, PASSWORD_DEFAULT), $rol]);
     $id = (int)db()->lastInsertId();
     session_regenerate_id(true);
     $_SESSION['user_id'] = $id;
-    reply(['id' => $id, 'nombre' => $nombre, 'correo' => $correo, 'rol' => 'almacenista'], 201);
+    reply(['id' => $id, 'nombre' => $nombre, 'correo' => $correo, 'rol' => $rol], 201);
 }
 
 if ($action === 'logout' && $method === 'POST') {

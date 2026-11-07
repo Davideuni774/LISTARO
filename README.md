@@ -48,6 +48,10 @@ Las entregas se gestionan desde `Paginas/entregas.html`.
   como entrada de inventario y actualiza sus entregas. No puede crear ni
   eliminar artículos, registrar salidas ni modificar la configuración.
 
+El registro público permite crear cuentas de almacenista o repartidor. Por
+seguridad, las cuentas de administrador solo se crean desde la gestión de
+usuarios de otro administrador.
+
 ## Descripción del proyecto
 
 LISTARO es un sistema web de gestión y control de inventario diseñado para establecimientos hoteleros. Su propósito es centralizar y organizar la información relacionada con los productos y elementos utilizados en las diferentes áreas de un hotel, facilitando el control de existencias y el seguimiento de los movimientos de inventario.

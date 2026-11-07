@@ -39,13 +39,27 @@ const Listaro = (() => {
     return enPaginas() ? "../index.html" : "index.html";
   }
 
+  function etiquetaRol(rol) {
+    return {
+      administrador: "Administrador",
+      almacenista: "Almacenista",
+      repartidor: "Repartidor",
+    }[rol] || "Usuario";
+  }
+
+  function rutaInicioSesion() {
+    return rutaPagina("inicio.html");
+  }
+
   /* ---------------------------------------------------- navegación */
   async function pintarNav() {
     const zona = document.querySelector(".nav-acciones");
     if (!zona) return;
     const u = await Datos.cargarSesion();
     zona.innerHTML = u
-      ? `<a class="btn btn-fantasma" href="${rutaPagina("panel.html")}">Mi panel</a>
+      ? `<a class="btn btn-fantasma" href="${rutaInicioSesion()}">Inicio</a>
+         <span class="usuario-nav">${escapar(u.nombre)} · ${etiquetaRol(u.rol)}</span>
+         <a class="btn btn-fantasma" href="${rutaPagina("panel.html")}">Inventario</a>
          ${u.rol === "administrador"
            ? `<a class="btn btn-fantasma" href="${rutaPagina("usuarios.html")}">Usuarios</a>`
            : ""}
@@ -106,7 +120,7 @@ const Listaro = (() => {
       const d = Object.fromEntries(new FormData(form).entries());
       try {
         await Datos.entrar(d.correo, d.clave);
-        window.location.href = rutaPagina("panel.html");
+        window.location.href = rutaInicioSesion();
       } catch (e) {
         mostrarError("#error-login", e.message);
       }
@@ -121,11 +135,47 @@ const Listaro = (() => {
       const d = Object.fromEntries(new FormData(form).entries());
       try {
         await Datos.registrar(d);
-        window.location.href = rutaPagina("panel.html");
+        window.location.href = rutaInicioSesion();
       } catch (e) {
         mostrarError("#error-registro", e.message);
       }
     });
+  }
+
+  async function iniciarInicio() {
+    const zona = document.getElementById("inicio-contenido");
+    if (!zona) return;
+    const u = await Datos.exigirSesion();
+    if (!u) return;
+    const rol = etiquetaRol(u.rol);
+    const contenido = {
+      administrador: `
+        <p class="hero-kicker">Panel de administración</p>
+        <h1>Hola, <span class="naranja">${escapar(u.nombre)}.</span></h1>
+        <p class="hero-texto">Administra usuarios, edificios, inventario y entregas desde un solo lugar.</p>
+        <div class="hero-acciones">
+          <a class="btn btn-naranja btn-grande" href="${rutaPagina("panel.html")}">Gestionar inventario</a>
+          <a class="btn btn-fantasma btn-grande" href="${rutaPagina("usuarios.html")}">Gestionar usuarios</a>
+          <a class="btn btn-fantasma btn-grande" href="${rutaPagina("entregas.html")}">Ver entregas</a>
+        </div>`,
+      almacenista: `
+        <p class="hero-kicker">Panel de almacén</p>
+        <h1>Hola, <span class="naranja">${escapar(u.nombre)}.</span></h1>
+        <p class="hero-texto">Administra existencias, registra movimientos y prepara las entregas del hotel.</p>
+        <div class="hero-acciones">
+          <a class="btn btn-naranja btn-grande" href="${rutaPagina("panel.html")}">Ver inventario</a>
+          <a class="btn btn-fantasma btn-grande" href="${rutaPagina("entregas.html")}">Gestionar entregas</a>
+        </div>`,
+      repartidor: `
+        <p class="hero-kicker">Panel de reparto</p>
+        <h1>Hola, <span class="naranja">${escapar(u.nombre)}.</span></h1>
+        <p class="hero-texto">Consulta tus entregas y realiza el surtido de las habitaciones asignadas.</p>
+        <div class="hero-acciones">
+          <a class="btn btn-naranja btn-grande" href="${rutaPagina("entregas.html")}">Ver mis entregas</a>
+          <a class="btn btn-fantasma btn-grande" href="${rutaPagina("panel.html")}">Consultar habitaciones</a>
+        </div>`,
+    }[u.rol];
+    zona.innerHTML = `<span class="pill pill-ok">${rol}</span>${contenido}`;
   }
 
   /* ---------------------------------------------------- panel */
@@ -406,6 +456,7 @@ const Listaro = (() => {
       await iniciarPanel();
       await iniciarEdificio();
       await iniciarHabitacion();
+      await iniciarInicio();
     } catch (error) {
       mostrarError("#error-login", error.message);
       mostrarError("#error-registro", error.message);

@@ -92,6 +92,14 @@ a { color: inherit; text-decoration: none; }
 .nav-links a { color: var(--texto-sub); font-size: .92rem; }
 .nav-links a:hover { color: var(--texto); }
 .nav-acciones { margin-left: auto; display: flex; gap: .6rem; }
+.usuario-nav {
+  display: inline-flex;
+  align-items: center;
+  color: var(--texto-sub);
+  font-size: .85rem;
+  padding: 0 .35rem;
+  white-space: nowrap;
+}
 
 /* ---------------------------------------------------------- botones */
 .btn {
