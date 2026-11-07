@@ -135,6 +135,34 @@ a { color: inherit; text-decoration: none; }
 .enlace-naranja { color: var(--naranja); }
 .enlace-naranja:hover { text-decoration: underline; }
 
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: .75rem;
+  align-items: end;
+}
+
+.form-grid input,
+.form-grid select,
+.selector-rol,
+.estado-entrega {
+  width: 100%;
+  padding: .65rem .75rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-chico);
+  background: var(--fondo-2);
+  color: var(--texto);
+  font: inherit;
+}
+
+.entrega {
+  display: grid;
+  gap: .5rem;
+}
+
+.entrega p { margin: 0; }
+.entrega-acciones { display: flex; justify-content: flex-end; }
+
 /* ---------------------------------------------------------- landing: hero */
 .hero {
   max-width: var(--ancho);

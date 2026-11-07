@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usuarios — Listaro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<header class="nav">
+  <a class="marca" href="../index.html"><span class="marca-punto"></span> Listaro</a>
+  <div class="nav-acciones"></div>
+</header>
+<main class="app">
+  <div class="app-cabecera">
+    <div><h1>Usuarios</h1><p class="sub">Administra roles y accesos.</p></div>
+  </div>
+  <section class="tarjeta">
+    <h2>Crear usuario</h2>
+    <form id="form-usuario" class="form-grid">
+      <input name="nombre" placeholder="Nombre" required>
+      <input name="correo" type="email" placeholder="Correo" required>
+      <input name="clave" type="password" placeholder="Contraseña (mínimo 8)" required>
+      <select name="rol" required>
+        <option value="almacenista">Almacenista</option>
+        <option value="repartidor">Repartidor</option>
+        <option value="administrador">Administrador</option>
+      </select>
+      <button class="btn btn-naranja" type="submit">Crear usuario</button>
+    </form>
+  </section>
+  <section class="tabla-envoltura">
+    <table class="tabla">
+      <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Creado</th></tr></thead>
+      <tbody id="lista-usuarios"></tbody>
+    </table>
+  </section>
+</main>
+<div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+<script src="../js/datos.js"></script>
+<script src="../js/roles.js"></script>
+<script src="../js/app.js"></script>
+</body>
+</html>

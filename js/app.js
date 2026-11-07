@@ -40,20 +40,24 @@ const Listaro = (() => {
   }
 
   /* ---------------------------------------------------- navegación */
-  function pintarNav() {
+  async function pintarNav() {
     const zona = document.querySelector(".nav-acciones");
     if (!zona) return;
-    const u = Datos.usuarioActual();
+    const u = await Datos.cargarSesion();
     zona.innerHTML = u
       ? `<a class="btn btn-fantasma" href="${rutaPagina("panel.html")}">Mi panel</a>
+         ${u.rol === "administrador"
+           ? `<a class="btn btn-fantasma" href="${rutaPagina("usuarios.html")}">Usuarios</a>`
+           : ""}
+         <a class="btn btn-fantasma" href="${rutaPagina("entregas.html")}">Entregas</a>
          <button class="btn btn-naranja" id="btn-salir">Cerrar sesión</button>`
       : `<a class="btn btn-fantasma" href="${rutaPagina("login.html")}">Entrar</a>
          <a class="btn btn-naranja" href="${rutaPagina("registro.html")}">Crear cuenta</a>`;
 
     const salir = document.getElementById("btn-salir");
     if (salir) {
-      salir.addEventListener("click", () => {
-        Datos.salir();
+      salir.addEventListener("click", async () => {
+        await Datos.salir();
         window.location.href = rutaInicio();
       });
     }
@@ -97,11 +101,11 @@ const Listaro = (() => {
   function iniciarLogin() {
     const form = document.getElementById("form-login");
     if (!form) return;
-    form.addEventListener("submit", (ev) => {
+    form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const d = Object.fromEntries(new FormData(form).entries());
       try {
-        Datos.entrar(d.correo, d.clave);
+        await Datos.entrar(d.correo, d.clave);
         window.location.href = rutaPagina("panel.html");
       } catch (e) {
         mostrarError("#error-login", e.message);
@@ -112,11 +116,11 @@ const Listaro = (() => {
   function iniciarRegistro() {
     const form = document.getElementById("form-registro");
     if (!form) return;
-    form.addEventListener("submit", (ev) => {
+    form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const d = Object.fromEntries(new FormData(form).entries());
       try {
-        Datos.registrar(d);
+        await Datos.registrar(d);
         window.location.href = rutaPagina("panel.html");
       } catch (e) {
         mostrarError("#error-registro", e.message);
@@ -125,17 +129,16 @@ const Listaro = (() => {
   }
 
   /* ---------------------------------------------------- panel */
-  function iniciarPanel() {
+  async function iniciarPanel() {
     const zona = document.getElementById("lista-edificios");
     if (!zona) return;
-    const u = Datos.exigirSesion();
+    const u = await Datos.exigirSesion();
     if (!u) return;
-
     document.getElementById("saludo").textContent =
       `Hola, ${u.nombre}. Este es el estado de tu inventario.`;
 
-    function pintar() {
-      const r = Datos.resumen(u.id);
+    async function pintar() {
+      const r = await Datos.resumen(u.id);
       document.getElementById("r-edificios").textContent = r.edificios;
       document.getElementById("r-habitaciones").textContent = r.habitaciones;
       document.getElementById("r-unidades").textContent = r.unidades;
@@ -143,7 +146,7 @@ const Listaro = (() => {
       alertas.textContent = r.alertas;
       alertas.className = r.alertas ? "naranja" : "";
 
-      const lista = Datos.edificiosDe(u.id);
+      const lista = await Datos.edificiosDe(u.id);
       if (!lista.length) {
         zona.className = "";
         zona.innerHTML = `
@@ -172,17 +175,24 @@ const Listaro = (() => {
         </a>`).join("");
     }
 
-    pintar();
+    await pintar();
 
-    document.getElementById("form-edificio").addEventListener("submit", (ev) => {
+    const formularioEdificio = document.getElementById("form-edificio");
+    const botonEdificio = document.querySelector('[data-abrir="modal-edificio"]');
+    if (u.rol !== "administrador") {
+      if (botonEdificio) botonEdificio.hidden = true;
+      if (formularioEdificio) formularioEdificio.closest(".modal").remove();
+    }
+    if (!formularioEdificio || u.rol !== "administrador") return;
+    formularioEdificio.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const d = Object.fromEntries(new FormData(ev.target).entries());
       try {
-        Datos.crearEdificio(u.id, d);
+        await Datos.crearEdificio(u.id, d);
         ev.target.reset();
         document.getElementById("modal-edificio").hidden = true;
         avisar("Edificio guardado.", "ok");
-        pintar();
+        await pintar();
       } catch (e) {
         avisar(e.message, "error");
       }
@@ -190,13 +200,12 @@ const Listaro = (() => {
   }
 
   /* ---------------------------------------------------- edificio */
-  function iniciarEdificio() {
+  async function iniciarEdificio() {
     const zona = document.getElementById("lista-habitaciones");
     if (!zona) return;
-    const u = Datos.exigirSesion();
+    const u = await Datos.exigirSesion();
     if (!u) return;
-
-    const ed = Datos.edificio(parametro("id"), u.id);
+    const ed = await Datos.edificio(parametro("id"), u.id);
     if (!ed) {
       window.location.href = rutaPagina("panel.html");
       return;
@@ -208,8 +217,8 @@ const Listaro = (() => {
     document.getElementById("ed-direccion").textContent =
       ed.direccion || "Sin dirección registrada";
 
-    function pintar() {
-      const lista = Datos.habitacionesDe(ed.id);
+    async function pintar() {
+      const lista = await Datos.habitacionesDe(ed.id);
       if (!lista.length) {
         zona.className = "";
         zona.innerHTML = `
@@ -237,17 +246,24 @@ const Listaro = (() => {
         </a>`).join("");
     }
 
-    pintar();
+    await pintar();
 
-    document.getElementById("form-habitacion").addEventListener("submit", (ev) => {
+    const formularioHabitacion = document.getElementById("form-habitacion");
+    const botonHabitacion = document.querySelector('[data-abrir="modal-habitacion"]');
+    if (u.rol !== "administrador") {
+      if (botonHabitacion) botonHabitacion.hidden = true;
+      if (formularioHabitacion) formularioHabitacion.closest(".modal").remove();
+    }
+    if (!formularioHabitacion || u.rol !== "administrador") return;
+    formularioHabitacion.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const d = Object.fromEntries(new FormData(ev.target).entries());
       try {
-        Datos.crearHabitacion(ed.id, d);
+        await Datos.crearHabitacion(ed.id, d);
         ev.target.reset();
         document.getElementById("modal-habitacion").hidden = true;
         avisar("Habitación guardada.", "ok");
-        pintar();
+        await pintar();
       } catch (e) {
         avisar(e.message, "error");
       }
@@ -255,13 +271,13 @@ const Listaro = (() => {
   }
 
   /* ---------------------------------------------------- habitación */
-  function iniciarHabitacion() {
+  async function iniciarHabitacion() {
     const cuerpo = document.getElementById("cuerpo-items");
     if (!cuerpo) return;
-    const u = Datos.exigirSesion();
+    const u = await Datos.exigirSesion();
     if (!u) return;
 
-    const hab = Datos.habitacion(parametro("id"), u.id);
+    const hab = await Datos.habitacion(parametro("id"), u.id);
     if (!hab) {
       window.location.href = rutaPagina("panel.html");
       return;
@@ -274,8 +290,8 @@ const Listaro = (() => {
     migaEd.textContent = hab.edificioNombre;
     migaEd.href = rutaPagina(`edificio.html?id=${hab.edificioId}`);
 
-    function pintar() {
-      const items = Datos.itemsDe(hab.id);
+    async function pintar() {
+      const items = await Datos.itemsDe(hab.id);
 
       document.getElementById("h-sub").textContent =
         `${hab.piso ? "Piso " + hab.piso + " · " : ""}${hab.estado} · ${items.length} artículos`;
@@ -298,13 +314,17 @@ const Listaro = (() => {
           </td>
           <td class="acciones-celda">
             <input class="mov-cantidad" type="number" min="1" value="1" aria-label="Cantidad a mover">
-            <button class="btn btn-mini" data-mov="entrada" data-id="${i.id}">Entrada</button>
-            <button class="btn btn-mini" data-mov="salida" data-id="${i.id}">Salida</button>
+            <button class="btn btn-mini" data-mov="entrada" data-id="${i.id}">Surtir</button>
+            ${u.rol !== "repartidor"
+              ? `<button class="btn btn-mini" data-mov="salida" data-id="${i.id}">Salida</button>`
+              : ""}
           </td>
-          <td><button class="btn btn-mini btn-peligro" data-borrar="${i.id}">Eliminar</button></td>
+          <td>${u.rol !== "repartidor"
+            ? `<button class="btn btn-mini btn-peligro" data-borrar="${i.id}">Eliminar</button>`
+            : ""}</td>
         </tr>`).join("");
 
-      const movs = Datos.movimientosDe(hab.id);
+      const movs = await Datos.movimientosDe(hab.id);
       const historial = document.getElementById("historial");
       historial.hidden = movs.length === 0;
       document.getElementById("lista-movimientos").innerHTML = movs.map((m) => `
@@ -319,23 +339,29 @@ const Listaro = (() => {
         </li>`).join("");
     }
 
-    pintar();
+    await pintar();
 
-    document.getElementById("form-item").addEventListener("submit", (ev) => {
+    const formularioItem = document.getElementById("form-item");
+    const botonItem = document.querySelector('[data-abrir="modal-item"]');
+    if (u.rol === "repartidor") {
+      if (botonItem) botonItem.hidden = true;
+      if (formularioItem) formularioItem.closest(".modal").remove();
+    }
+    if (formularioItem) formularioItem.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const d = Object.fromEntries(new FormData(ev.target).entries());
       try {
-        Datos.crearItem(hab.id, d);
+        await Datos.crearItem(hab.id, d);
         ev.target.reset();
         document.getElementById("modal-item").hidden = true;
         avisar("Artículo guardado.", "ok");
-        pintar();
+        await pintar();
       } catch (e) {
         avisar(e.message, "error");
       }
     });
 
-    cuerpo.addEventListener("click", (ev) => {
+    cuerpo.addEventListener("click", async (ev) => {
       const mov = ev.target.closest("[data-mov]");
       if (mov) {
         const fila = mov.closest("tr");
@@ -347,11 +373,11 @@ const Listaro = (() => {
           return;
         }
         try {
-          Datos.registrarMovimiento(Number(mov.dataset.id), mov.dataset.mov, cantidad);
+          await Datos.registrarMovimiento(Number(mov.dataset.id), mov.dataset.mov, cantidad);
           avisar(mov.dataset.mov === "entrada"
             ? `Entrada registrada: +${cantidad}.`
             : `Salida registrada: −${cantidad}.`, "ok");
-          pintar();
+          await pintar();
         } catch (e) {
           avisar(e.message, "error");
         }
@@ -362,22 +388,29 @@ const Listaro = (() => {
       if (borrar) {
         const nombre = borrar.closest("tr").querySelector(".fuerte").textContent;
         if (!confirm(`¿Eliminar "${nombre}" y su historial de movimientos?`)) return;
-        Datos.borrarItem(Number(borrar.dataset.borrar));
+        await Datos.borrarItem(Number(borrar.dataset.borrar));
         avisar("Artículo eliminado.", "ok");
-        pintar();
+        await pintar();
       }
     });
   }
 
   /* ---------------------------------------------------- arranque */
-  document.addEventListener("DOMContentLoaded", () => {
-    pintarNav();
-    activarModales();
-    iniciarLogin();
-    iniciarRegistro();
-    iniciarPanel();
-    iniciarEdificio();
-    iniciarHabitacion();
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      await Datos.cargarSesion();
+      await pintarNav();
+      activarModales();
+      iniciarLogin();
+      iniciarRegistro();
+      await iniciarPanel();
+      await iniciarEdificio();
+      await iniciarHabitacion();
+    } catch (error) {
+      mostrarError("#error-login", error.message);
+      mostrarError("#error-registro", error.message);
+      avisar(error.message, "error");
+    }
   });
 
   return { avisar };
